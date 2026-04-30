@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Cocktailisimo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Italiana&family=Inter:wght@300;400;500;600&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0807;
+    --bg-velvet: #14100d;
+    --bg-marble: #1a1612;
+    --cream: #f5ecd9;
+    --cream-dim: #d9cfb8;
+    --gold: #c9a961;
+    --gold-bright: #e6c878;
+    --gold-deep: #8b6f3a;
+    --ink: #0a0807;
+    --line: rgba(201, 169, 97, 0.25);
+    --line-soft: rgba(245, 236, 217, 0.08);
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+
+    --status-new: #4a90e2;
+    --status-confirmed: #c9a961;
+    --status-delivery: #e6a23c;
+    --status-delivered: #67c23a;
+    --status-cancelled: #f56c6c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', 'Heebo', serif;
+    font-weight: 300;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* Top Bar */
+  .admin-top {
+    border-bottom: 1px solid var(--line);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-velvet);
+  }
+
+  .admin-logo {
+    font-family: 'Italiana', serif;
+    font-size: 22px;
+    letter-spacing: 0.4em;
+    color: var(--cream);
+    text-transform: uppercase;
+  }
+
+  .admin-logo span {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    margin-right: 12px;
+    border: 1px solid var(--gold);
+    padding: 4px 10px;
+  }
+
+  .admin-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .admin-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 8px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  .admin-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .admin-btn.primary {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+  }
+
+  .admin-btn.primary:hover { background: var(--gold-bright); color: var(--ink); }
+
+  .notif-status {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .notif-status.granted { color: var(--status-delivered); }
+
+  /* Layout */
+  .admin-content { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+
+  /* Stats */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    margin-bottom: 32px;
+    border: 1px solid var(--line-soft);
+    background: var(--line-soft);
+  }
+
+  .stat-card {
+    background: var(--bg-velvet);
+    padding: 24px;
+  }
+
+  .stat-card .label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .stat-card .value {
+    font-family: 'Italiana', serif;
+    font-size: 36px;
+    color: var(--cream);
+    line-height: 1;
+  }
+
+  .stat-card .sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--cream-dim);
+    margin-top: 8px;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .filter-search {
+    flex: 1;
+    min-width: 240px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 12px 16px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    direction: rtl;
+  }
+
+  .filter-search:focus { outline: none; border-color: var(--gold); }
+
+  .filter-pill {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--cream-dim);
+    padding: 8px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  .filter-pill:hover { border-color: var(--gold); color: var(--gold); }
+
+  .filter-pill.active {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+  }
+
+  /* Orders */
+  .orders-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .order-card {
+    border: 1px solid var(--line-soft);
+    background: var(--bg-velvet);
+    padding: 0;
+    transition: border-color 0.3s ease;
+    overflow: hidden;
+  }
+
+  .order-card:hover { border-color: var(--line); }
+
+  .order-card.expanded { border-color: var(--gold); }
+
+  .order-header {
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 24px;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .order-id {
+    font-family: 'Italiana', serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    min-width: 90px;
+  }
+
+  .order-customer .name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+
+  .order-customer .meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+  }
+
+  .order-delivery {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--cream-dim);
+    text-align: center;
+  }
+
+  .order-delivery .date {
+    color: var(--cream);
+    font-style: normal;
+    font-size: 16px;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .order-total {
+    font-family: 'Italiana', serif;
+    font-size: 22px;
+    color: var(--gold);
+  }
+
+  .status-badge {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    padding: 6px 12px;
+    text-transform: uppercase;
+    border: 1px solid;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .status-new { color: var(--status-new); border-color: var(--status-new); }
+  .status-confirmed { color: var(--status-confirmed); border-color: var(--status-confirmed); }
+  .status-in_delivery { color: var(--status-delivery); border-color: var(--status-delivery); }
+  .status-delivered { color: var(--status-delivered); border-color: var(--status-delivered); }
+  .status-cancelled { color: var(--status-cancelled); border-color: var(--status-cancelled); opacity: 0.7; }
+
+  /* Expanded view */
+  .order-body {
+    display: none;
+    padding: 24px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--bg-marble);
+  }
+
+  .order-card.expanded .order-body { display: block; }
+
+  .order-body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 32px;
+    margin-bottom: 24px;
+  }
+
+  .info-block h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .info-block p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--cream-dim);
+    line-height: 1.7;
+  }
+
+  .info-block .value {
+    color: var(--cream);
+    font-size: 16px;
+  }
+
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .items-table th, .items-table td {
+    padding: 8px 0;
+    text-align: right;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .items-table th {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    padding-bottom: 12px;
+  }
+
+  .items-table td.item-name { color: var(--cream); }
+  .items-table td.item-price { color: var(--gold); font-family: 'Italiana', serif; }
+
+  .order-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .order-actions .label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    align-self: center;
+    margin-left: 8px;
+  }
+
+  .status-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 8px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  .status-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .status-btn.danger:hover { border-color: var(--status-cancelled); color: var(--status-cancelled); }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--cream-dim);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+  }
+
+  .empty-state .mark {
+    font-family: 'Italiana', serif;
+    font-size: 60px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  /* Mobile */
+  @media (max-width: 900px) {
+    .admin-top { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+    .admin-content { padding: 20px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .order-header {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .order-id, .order-delivery, .order-total, .status-badge {
+      font-size: 13px;
+    }
+    .order-body-grid { grid-template-columns: 1fr; gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-top">
+  <div class="admin-logo">
+    <span>ADMIN</span>COCKTAILISIMO
+  </div>
+  <div class="admin-actions">
+    <span class="notif-status" id="notif-status">התראות מבוטלות</span>
+    <button class="admin-btn" onclick="requestNotifications()">הפעל התראות</button>
+    <button class="admin-btn" onclick="exportOrders()">ייצוא CSV</button>
+    <a href="index.html" class="admin-btn primary" style="text-decoration:none; display:inline-block;">לאתר →</a>
+  </div>
+</div>
+
+<div class="admin-content">
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="filters">
+    <input type="text" class="filter-search" id="filter-search" placeholder="חיפוש לפי שם, טלפון, מספר הזמנה...">
+    <button class="filter-pill active" data-status="all">הכל</button>
+    <button class="filter-pill" data-status="new">חדשות</button>
+    <button class="filter-pill" data-status="confirmed">אושרו</button>
+    <button class="filter-pill" data-status="in_delivery">במשלוח</button>
+    <button class="filter-pill" data-status="delivered">נמסרו</button>
+    <button class="filter-pill" data-status="cancelled">בוטלו</button>
+  </div>
+
+  <div class="orders-list" id="orders-list"></div>
+</div>
+
+<script>
+const ORDER_STORAGE_KEY = 'cocktailisimo_orders';
+const BUSINESS_PHONE = '972542660141';
+const HEBREW_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const HEBREW_MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+
+const STATUS_LABELS = {
+  new: 'חדש',
+  confirmed: 'אושר',
+  in_delivery: 'במשלוח',
+  delivered: 'נמסר',
+  cancelled: 'בוטל'
+};
+
+const STATUS_FLOW = {
+  new: ['confirmed', 'cancelled'],
+  confirmed: ['in_delivery', 'cancelled'],
+  in_delivery: ['delivered', 'cancelled'],
+  delivered: [],
+  cancelled: []
+};
+
+let activeFilter = 'all';
+let searchQuery = '';
+let knownOrderIds = new Set();
+let expandedOrderId = null;
+
+function loadOrders() {
+  try {
+    const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveOrders(orders) {
+  try {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
+  } catch (e) {
+    console.error('Could not save orders', e);
+  }
+}
+
+function updateOrderStatus(id, newStatus) {
+  const orders = loadOrders();
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  order.status = newStatus;
+  order.statusUpdatedAt = new Date().toISOString();
+  saveOrders(orders);
+  render();
+}
+
+function deleteOrder(id) {
+  if (!confirm('למחוק את ההזמנה לגמרי? פעולה זו אינה הפיכה.')) return;
+  const orders = loadOrders().filter(o => o.id !== id);
+  saveOrders(orders);
+  render();
+}
+
+function toggleExpand(id) {
+  expandedOrderId = expandedOrderId === id ? null : id;
+  render();
+}
+
+function render() {
+  const allOrders = loadOrders();
+
+  // Stats
+  const statsRow = document.getElementById('stats-row');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayISO = dateToISO(today);
+
+  const todayOrders = allOrders.filter(o => o.delivery && o.delivery.date === todayISO);
+  const newOrders = allOrders.filter(o => o.status === 'new');
+  const inProgress = allOrders.filter(o => ['confirmed', 'in_delivery'].includes(o.status));
+  const totalRevenue = allOrders
+    .filter(o => o.status === 'delivered')
+    .reduce((s, o) => s + (o.total || 0), 0);
+
+  statsRow.innerHTML = `
+    <div class="stat-card">
+      <div class="label">חדשות</div>
+      <div class="value">${newOrders.length}</div>
+      <div class="sub">ממתינות לאישור</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">בתהליך</div>
+      <div class="value">${inProgress.length}</div>
+      <div class="sub">אושרו או יצאו</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">להיום</div>
+      <div class="value">${todayOrders.length}</div>
+      <div class="sub">משלוחים מתוכננים</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">הכנסות</div>
+      <div class="value">${totalRevenue}₪</div>
+      <div class="sub">סה"כ מהזמנות שנמסרו</div>
+    </div>
+  `;
+
+  // Filter
+  let filtered = allOrders;
+  if (activeFilter !== 'all') {
+    filtered = filtered.filter(o => o.status === activeFilter);
+  }
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(o =>
+      (o.id || '').toLowerCase().includes(q) ||
+      (o.customer && o.customer.name || '').toLowerCase().includes(q) ||
+      (o.customer && o.customer.phone || '').includes(q)
+    );
+  }
+
+  // Orders list
+  const list = document.getElementById('orders-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="mark">∅</div>
+        ${allOrders.length === 0 ? 'עדיין לא הגיעו הזמנות' : 'אין הזמנות התואמות לסינון'}
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = filtered.map(order => renderOrderCard(order)).join('');
+}
+
+function renderOrderCard(order) {
+  const isExpanded = order.id === expandedOrderId;
+  const itemsTotal = (order.items || []).reduce((s, i) => s + (i.qty || 0), 0);
+
+  // Header
+  const header = `
+    <div class="order-header" onclick="toggleExpand('${order.id}')">
+      <div class="order-id">${order.id}</div>
+      <div class="order-customer">
+        <div class="name">${escapeHtml(order.customer.name)}</div>
+        <div class="meta">${escapeHtml(order.customer.phone)} · ${itemsTotal} פריטים</div>
+      </div>
+      <div class="order-delivery">
+        <span class="date">${escapeHtml(order.delivery.dateLabel)}</span>
+        ${escapeHtml(order.delivery.time)} · ${escapeHtml(order.address.city)}
+      </div>
+      <div class="order-total">${order.total}₪</div>
+      <div class="status-badge status-${order.status}">${STATUS_LABELS[order.status] || order.status}</div>
+    </div>
+  `;
+
+  // Body
+  const itemsRows = (order.items || []).map(i => `
+    <tr>
+      <td class="item-name">${escapeHtml(i.name)} <span style="color:var(--cream-dim); font-style:italic; font-size: 12px;">${i.size}ml</span></td>
+      <td>× ${i.qty}</td>
+      <td class="item-price">${i.lineTotal}₪</td>
+    </tr>
+  `).join('');
+
+  const statusBtns = (STATUS_FLOW[order.status] || []).map(next => `
+    <button class="status-btn ${next === 'cancelled' ? 'danger' : ''}"
+            onclick="event.stopPropagation(); updateOrderStatus('${order.id}', '${next}')">
+      ${getActionLabel(order.status, next)}
+    </button>
+  `).join('');
+
+  const callPhone = (order.customer.phone || '').replace(/[^0-9]/g, '');
+  const waPhone = callPhone.startsWith('0') ? '972' + callPhone.slice(1) : callPhone;
+
+  const body = `
+    <div class="order-body">
+      <div class="order-body-grid">
+        <div class="info-block">
+          <h4>לקוח</h4>
+          <p><span class="value">${escapeHtml(order.customer.name)}</span></p>
+          <p>${escapeHtml(order.customer.phone)}</p>
+          ${order.customer.email ? `<p>${escapeHtml(order.customer.email)}</p>` : ''}
+        </div>
+        <div class="info-block">
+          <h4>משלוח</h4>
+          <p><span class="value">${escapeHtml(order.delivery.dateLabel)}</span></p>
+          <p>שעה: ${escapeHtml(order.delivery.time)} (±60 דק׳)</p>
+          <p>${escapeHtml(order.address.street)}, ${escapeHtml(order.address.city)}</p>
+          ${order.address.notes ? `<p style="font-style:italic; margin-top: 8px;">${escapeHtml(order.address.notes)}</p>` : ''}
+        </div>
+        <div class="info-block">
+          <h4>פריטים</h4>
+          <table class="items-table">
+            ${itemsRows}
+          </table>
+          <p style="margin-top: 12px;">
+            תשלום: <span class="value">${order.payment.method === 'card' ? 'אשראי' : 'מזומן בדלת'}</span>
+          </p>
+        </div>
+      </div>
+      <div class="order-actions">
+        <span class="label">פעולות:</span>
+        ${statusBtns}
+        <a href="tel:${callPhone}" class="status-btn" style="text-decoration:none; display:inline-block;" onclick="event.stopPropagation()">📞 התקשר</a>
+        <a href="https://wa.me/${waPhone}" target="_blank" class="status-btn" style="text-decoration:none; display:inline-block;" onclick="event.stopPropagation()">💬 וואטסאפ</a>
+        <button class="status-btn danger" onclick="event.stopPropagation(); deleteOrder('${order.id}')">🗑 מחק</button>
+      </div>
+    </div>
+  `;
+
+  return `<div class="order-card ${isExpanded ? 'expanded' : ''}">${header}${body}</div>`;
+}
+
+function getActionLabel(currentStatus, nextStatus) {
+  const labels = {
+    confirmed: '✓ אשר הזמנה',
+    in_delivery: '🚗 יצא למשלוח',
+    delivered: '✓ נמסר ללקוח',
+    cancelled: '✕ בטל'
+  };
+  return labels[nextStatus] || nextStatus;
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function dateToISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeFilter = pill.dataset.status;
+    render();
+  });
+});
+
+// Search
+document.getElementById('filter-search').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+
+// Notifications
+function updateNotifStatus() {
+  const status = document.getElementById('notif-status');
+  if (!('Notification' in window)) {
+    status.textContent = 'דפדפן לא תומך בהתראות';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    status.textContent = '✓ התראות פעילות';
+    status.classList.add('granted');
+  } else if (Notification.permission === 'denied') {
+    status.textContent = 'התראות נחסמו (יש להפעיל בדפדפן)';
+  } else {
+    status.textContent = 'התראות מבוטלות';
+  }
+}
+
+function requestNotifications() {
+  if (!('Notification' in window)) {
+    alert('הדפדפן לא תומך בהתראות');
+    return;
+  }
+  Notification.requestPermission().then(perm => {
+    updateNotifStatus();
+    if (perm === 'granted') {
+      new Notification('🍸 Cocktailisimo Admin', { body: 'התראות הופעלו! תקבל הודעה על כל הזמנה חדשה.' });
+    }
+  });
+}
+
+// Export to CSV
+function exportOrders() {
+  const orders = loadOrders();
+  if (orders.length === 0) {
+    alert('אין הזמנות לייצא');
+    return;
+  }
+
+  const headers = ['ID', 'תאריך הזמנה', 'סטטוס', 'שם', 'טלפון', 'אימייל', 'עיר', 'כתובת', 'הערות', 'תאריך אספקה', 'שעת אספקה', 'תשלום', 'פריטים', 'סה״כ'];
+  const rows = orders.map(o => [
+    o.id,
+    new Date(o.createdAt).toLocaleString('he-IL'),
+    STATUS_LABELS[o.status] || o.status,
+    o.customer.name,
+    o.customer.phone,
+    o.customer.email || '',
+    o.address.city,
+    o.address.street,
+    o.address.notes || '',
+    o.delivery.dateLabel,
+    o.delivery.time,
+    o.payment.method === 'card' ? 'אשראי' : 'מזומן',
+    (o.items || []).map(i => `${i.name} x${i.qty}`).join(' | '),
+    o.total
+  ]);
+
+  const csv = [headers, ...rows].map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  // Add BOM for Excel UTF-8 support
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cocktailisimo-orders-${dateToISO(new Date())}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Live polling for new orders (works across tabs in same browser)
+function checkForNewOrders() {
+  const orders = loadOrders();
+  const currentIds = new Set(orders.map(o => o.id));
+
+  // Find new orders that we didn't know about
+  const newOnes = orders.filter(o => !knownOrderIds.has(o.id) && knownOrderIds.size > 0);
+
+  if (newOnes.length > 0 && Notification.permission === 'granted') {
+    newOnes.forEach(o => {
+      new Notification('🍸 הזמנה חדשה — Cocktailisimo', {
+        body: `${o.customer.name} | ${o.total}₪ | ${o.delivery.dateLabel} ${o.delivery.time}`,
+        tag: o.id,
+        requireInteraction: true
+      });
+    });
+    // Re-render to show new order
+    render();
+  }
+
+  knownOrderIds = currentIds;
+}
+
+// Initial setup
+updateNotifStatus();
+const initialOrders = loadOrders();
+knownOrderIds = new Set(initialOrders.map(o => o.id));
+render();
+
+// Check for new orders every 3 seconds
+setInterval(checkForNewOrders, 3000);
+
+// Also listen to storage events (cross-tab sync)
+window.addEventListener('storage', (e) => {
+  if (e.key === ORDER_STORAGE_KEY) {
+    checkForNewOrders();
+    render();
+  }
+});
+</script>
+
+</body>
+</html>
