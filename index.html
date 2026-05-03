@@ -2714,67 +2714,64 @@ function startHeroSlideshow() {
   const overlay = document.getElementById('hero-overlay');
   const nameEl = document.getElementById('hero-image-name');
   const metaEl = document.getElementById('hero-image-meta');
-  if (!imgA || !imgB || !nameEl) return;
+  if (!imgA || !imgB || !nameEl) {
+    console.warn('[hero] missing elements', {imgA, imgB, overlay, nameEl, metaEl});
+    return;
+  }
 
-  // Build slide list from cocktails that have images. Include alt images too
-  // for extra variety, and shuffle so each visit feels fresh.
+  // Build slide list from every cocktail image (main + alt), shuffled.
   const slides = [];
   cocktails.forEach(c => {
-    if (IMAGES[c.id]) {
-      slides.push({ src: IMAGES[c.id], name: c.name, meta: c.ingredients.split('·')[0].trim() + ' · ' + c.abv });
-    }
-    const altKey = c.id + '-alt';
-    if (IMAGES[altKey]) {
-      slides.push({ src: IMAGES[altKey], name: c.name, meta: c.ingredients.split('·')[0].trim() + ' · ' + c.abv });
-    }
+    const meta = (c.ingredients || '').split('·')[0].trim() + ' · ' + (c.abv || '');
+    if (IMAGES[c.id]) slides.push({ src: IMAGES[c.id], name: c.name, meta });
+    if (IMAGES[c.id + '-alt']) slides.push({ src: IMAGES[c.id + '-alt'], name: c.name, meta });
   });
-  if (slides.length === 0) return;
-  // Fisher-Yates shuffle (visual variety on every page load)
+  if (slides.length === 0) {
+    console.warn('[hero] no slides found');
+    return;
+  }
   for (let i = slides.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [slides[i], slides[j]] = [slides[j], slides[i]];
   }
+  console.log('[hero] slideshow started with', slides.length, 'slides');
 
   let idx = 0;
   let frontIsA = true;
-  // Initialize the front layer with the first slide
   imgA.src = slides[0].src;
+  imgB.src = slides[1 % slides.length].src; // preload second image immediately
   imgA.classList.add('is-front');
   imgB.classList.add('is-back');
   nameEl.textContent = slides[0].name.toUpperCase();
   metaEl.textContent = slides[0].meta;
 
-  const INTERVAL = 4500; // ms between slides
+  const INTERVAL = 4500;
   function tick() {
     idx = (idx + 1) % slides.length;
     const next = slides[idx];
     const front = frontIsA ? imgA : imgB;
     const back = frontIsA ? imgB : imgA;
 
-    // Preload next image into the back layer, then crossfade once loaded
-    const tmp = new Image();
-    tmp.onload = () => {
-      back.src = next.src;
-      // Fade overlay text out, swap layers, then fade text back in
-      overlay.classList.add('is-fading');
-      requestAnimationFrame(() => {
-        front.classList.remove('is-front');
-        front.classList.add('is-back');
-        back.classList.remove('is-back');
-        back.classList.add('is-front');
-        frontIsA = !frontIsA;
-      });
-      setTimeout(() => {
-        nameEl.textContent = next.name.toUpperCase();
-        metaEl.textContent = next.meta;
-        overlay.classList.remove('is-fading');
-      }, 550);
-    };
-    tmp.src = next.src;
+    // back already has the current "next" preloaded — just crossfade
+    overlay.classList.add('is-fading');
+    front.classList.remove('is-front');
+    front.classList.add('is-back');
+    back.classList.remove('is-back');
+    back.classList.add('is-front');
+    frontIsA = !frontIsA;
+
+    setTimeout(() => {
+      nameEl.textContent = next.name.toUpperCase();
+      metaEl.textContent = next.meta;
+      overlay.classList.remove('is-fading');
+    }, 550);
+
+    // Preload the slide after this one into the now-hidden layer
+    const upcoming = slides[(idx + 1) % slides.length];
+    setTimeout(() => { front.src = upcoming.src; }, 1700);
   }
 
   let timer = setInterval(tick, INTERVAL);
-  // Pause when the tab isn't visible to save CPU/battery
   document.addEventListener('visibilitychange', () => {
     clearInterval(timer);
     if (!document.hidden) timer = setInterval(tick, INTERVAL);
